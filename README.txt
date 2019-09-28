@@ -1,6 +1,6 @@
-This softaware woeks with the input/const.root tree, that contains the tests results of VMM3a chips (of CERN ATLAS NSW project).
-It generates files for the loacal database:
-- Datatabase, Certificates of best measurements for every chip
+This software works with the input/const.root tree, that contains the tests results of VMM3a chips (of CERN ATLAS NSW project).
+It generates files for the local database:
+- Database and Certificates files of best measurements for every chip
 - Statuses of all measurements of all chips
 - Histograms of testing results
 - intermediate files, that can be used to upload results to the Global CERN database.
