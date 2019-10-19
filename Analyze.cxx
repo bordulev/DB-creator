@@ -611,13 +611,6 @@ int write_to_Global(int arr[][11], int arrSize){
     fileo_dead_ch_PDO<<"NegDeadChannels\t\t\t\t\t\t\t\tPosDeadChannels"<<endl;
     fileo_dead_ch_TDO<<"NegDeadChannels\t\t\t\t\t\t\t\tPosDeadChannels"<<endl;
     fileo_dead_ch_DDO<<"NegDeadChannels\t\t\t\t\t\t\t\tPosDeadChannels"<<endl;
-    fileo_Bline<<endl;
-    fileo_PDO_mean<<endl; 
-    fileo_TDO_mean<<endl; 
-    fileo_PDO_entries<<endl; 
-    fileo_TDO_entries<<endl; 
-    fileo_DDO_mean<<endl; 
-    fileo_ART_entries<<endl;
 
     for (i = 0; i<arrSize; i++){
         Status = calculate_Total_Stat_two_Polarities(arr, arrSize, arr[i][0]);
