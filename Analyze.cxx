@@ -45,6 +45,8 @@ void two_2Dhist(string xname1, string yname1, string xname2, string yname2, TH2F
 int Number_of_dead_channel();
 //Function that prepares the file to futher download dead channels to Electronics DB "SN - dead сhannels neg"
 int write_to_Global(int arr[][11], int arrSize);
+//Function that pront the value in a log file, or (if there is no value) prints "-"
+int print_to_log_to_Global(float value, ofstream& file);
 //---------------------------------------- Main code ---------------------------------------------
 int main()
 {
@@ -70,6 +72,7 @@ int main()
     roottree->SetBranchAddress("boardId",&boardId);
     roottree->SetBranchAddress("chipStatusNEG",&chipStatusNEG);
     roottree->SetBranchAddress("chipStatusPOS",&chipStatusPOS);
+    roottree->SetBranchAddress("chipStatus",&chipStatus);
     roottree->SetBranchAddress("pos_DEAD_CHANNELS",&pos_DEAD_CHANNELS, &b_pos_DEAD_CHANNELS);
     roottree->SetBranchAddress("neg_DEAD_CHANNELS",&neg_DEAD_CHANNELS, &b_neg_DEAD_CHANNELS);
 
@@ -95,6 +98,8 @@ int main()
     roottree->SetBranchAddress("PDOEntriesMEAN_L0",&PDOEntriesMEAN_L0NEG);
     roottree->SetBranchAddress("TDOEntriesMEAN_L0POS",&TDOEntriesMEAN_L0POS);
     roottree->SetBranchAddress("TDOEntriesMEAN_L0",&TDOEntriesMEAN_L0NEG);
+    roottree->SetBranchAddress("EntriesARTneg",&EntriesARTneg);
+    roottree->SetBranchAddress("EntriesARTpos",&EntriesARTpos);
     roottree->SetBranchAddress("PDORMS_L0", PDORMS_L0);
     roottree->SetBranchAddress("PDORMS_L0POS", PDORMS_L0POS);
     roottree->SetBranchAddress("PDOIntercept_L0", PDOIntercept_L0);//45
@@ -200,7 +205,7 @@ int main()
     write_to_Certificate(VMM_array, nentries, 0, 1); //BEST NEG MEASUREMENTS
     write_to_Certificate(VMM_array, nentries, 1, 1); //BEST POS MEASUREMENTS
     fileo.close();
-
+    
     //Write to file STATUS_FR3018_FR3118.txt
     fileo.open(path_to_file_status_FR);
     write_header();
@@ -215,24 +220,38 @@ int main()
     
     Fill_Hist(VMM_array, nentries, 0);
     Fill_Hist(VMM_array, nentries, 1); 
-    */
+    */ 
     fileo.open(path_to_file_GlobalLog);//General information for database
     fileo_dead_ch.open(path_to_file_GlobalLog_dead_ch);//Dead channels information
     fileo_dead_ch_Bline.open(path_to_file_GlobalLog_dead_ch_Bline);//Dead channels Bline
-    /*fileo_dead_ch_ART.open(path_to_file_GlobalLog_dead_ch_ART);//Dead channels ART
+    fileo_dead_ch_ART.open(path_to_file_GlobalLog_dead_ch_ART);//Dead channels ART
     fileo_dead_ch_PDO.open(path_to_file_GlobalLog_dead_ch_PDO);//Dead channels PDO
     fileo_dead_ch_TDO.open(path_to_file_GlobalLog_dead_ch_TDO);//Dead channels TDO
     fileo_dead_ch_DDO.open(path_to_file_GlobalLog_dead_ch_DDO);//Dead channels DDO*/
-    
+    fileo_Bline.open(path_to_file_GlobalLog_Bline);//Dead channels Bline   
+    fileo_PDO_mean.open(path_to_file_GlobalLog_PDO_mean);
+    fileo_TDO_mean.open(path_to_file_GlobalLog_TDO_mean);
+    fileo_PDO_entries.open(path_to_file_GlobalLog_PDO_entries);
+    fileo_TDO_entries.open(path_to_file_GlobalLog_TDO_entries);
+    fileo_DDO_mean.open(path_to_file_GlobalLog_DDO_mean);
+    fileo_ART_entries.open(path_to_file_GlobalLog_ART_entries);
+
     write_to_Global(VMM_array, nentries);
     
     fileo.close();
     fileo_dead_ch.close();
     fileo_dead_ch_Bline.close();
-    /*fileo_dead_ch_ART.close();
+    fileo_dead_ch_ART.close();
     fileo_dead_ch_PDO.close();
     fileo_dead_ch_TDO.close();
-    fileo_dead_ch_DDO.close();*/
+    fileo_dead_ch_DDO.close();
+    fileo_Bline.close();
+    fileo_PDO_mean.close();
+    fileo_TDO_mean.close();
+    fileo_PDO_entries.close();
+    fileo_TDO_entries.close();
+    fileo_ART_entries.close();
+    fileo_DDO_mean.close();
 
     return 0;
 }
@@ -260,7 +279,8 @@ void Fill_Hist(int arr[][11], int arrSize, int FR_KR){ //neg = 0, pos = 1
     sprintf(pdfopen, "%s[", pdfname);
     sprintf(pdfclose, "%s]", pdfname);
     Canv->Print(pdfopen, "pdf"); //second parameter is a format
-
+    
+    hSatus_VS_VMMId->Reset("ICESM");
     hbline->Reset("ICESM");
     hblineVMM->Reset("ICESM");
     hblineTEMP->Reset("ICESM");
@@ -363,6 +383,7 @@ void Fill_Hist(int arr[][11], int arrSize, int FR_KR){ //neg = 0, pos = 1
                         }
                     }
                 }
+                hSatus_VS_VMMId->Fill(VMMId, chipStatus); //0th
             }
             if (arr[i][5] == 1 || arr[i][5] == 21 || arr[i][5] == 221){ //we will write only the best measurements for POS measurments
                 for (k = 0; k<64; k++){
@@ -400,6 +421,7 @@ void Fill_Hist(int arr[][11], int arrSize, int FR_KR){ //neg = 0, pos = 1
     }
     //Print the Baseline in log scale
     gStyle->SetOptStat("eou");
+    one_2Dhist("VMMId", "Status", hSatus_VS_VMMId);//00
     one_1Dhist("mV", "count channels", hbline, 1);//01
     one_1Dhist("mV", "count channels", hbline, 0);//02
     one_2Dhist("VMMId", "Baseline, mV", hblineVMM);//03
@@ -576,16 +598,28 @@ int calculate_Total_Stat_two_Polarities(int arr[][11], int arrSize, int VMMID){
     }
     return StatTotal;
 }
-//NegDeadChCount arr[i][6]  PosDeadChCount arr[i][7]  NegStatus arr[i][2]  PosStatus arr[i][3]
+//NegDeadChCount arr[i][6]  PosDeadChCount arr[i][7]  NegStatus arr[i][2]  PosStatus arr[i][3] numberBadCh_ARTneg
 int write_to_Global(int arr[][11], int arrSize){
     int Status;
-    int flag_good_or_bad;
+    int flag_good_or_bad, flag_good_or_bad_ART;
     fileo<<"SN\tStatus\tPartID\tFPGAver\t\t"; //General fields
     fileo<<"NegTime\t\tNegDeadChCount\tNegStatus\tNegBoardID\t"; //Negative field
     fileo<<"PosTime\t\tPosDeadChCount\tPosStatus\tPosBoardID"<<endl; //Positive fields
     fileo_dead_ch<<"NegDeadChannels\t\t\t\t\t\t\t\tPosDeadChannels"<<endl;
     fileo_dead_ch_Bline<<"NegDeadChannels\t\t\t\t\t\t\t\tPosDeadChannels"<<endl;
-    for (i = 0; i<400; i++){
+    fileo_dead_ch_ART<<"NegDeadChannels\t\t\t\t\t\t\t\tPosDeadChannels"<<endl;
+    fileo_dead_ch_PDO<<"NegDeadChannels\t\t\t\t\t\t\t\tPosDeadChannels"<<endl;
+    fileo_dead_ch_TDO<<"NegDeadChannels\t\t\t\t\t\t\t\tPosDeadChannels"<<endl;
+    fileo_dead_ch_DDO<<"NegDeadChannels\t\t\t\t\t\t\t\tPosDeadChannels"<<endl;
+    fileo_Bline<<endl;
+    fileo_PDO_mean<<endl; 
+    fileo_TDO_mean<<endl; 
+    fileo_PDO_entries<<endl; 
+    fileo_TDO_entries<<endl; 
+    fileo_DDO_mean<<endl; 
+    fileo_ART_entries<<endl;
+
+    for (i = 0; i<arrSize; i++){
         Status = calculate_Total_Stat_two_Polarities(arr, arrSize, arr[i][0]);
         if ((arr[i][4] == 1) || (arr[i][4] == 21) || (arr[i][4] == 221)){ //if FlagNeg is good
                 roottree->GetEntry(i);
@@ -593,28 +627,75 @@ int write_to_Global(int arr[][11], int arrSize){
 	        fileo<<arr[i][8]<<"\t"<<arr[i][6]<<"\t\t"<<arr[i][2]<<"\t\t"<<arr[i][10]<<"\t\t"; //Negative fields data
                 //Now, lets write the information about dead channels_Negative
                 for (k = 0; k<64; k++){
-                    flag_good_or_bad = 1; //By default, the channel is OK
+                    flag_good_or_bad = 1; //By default, the channel is OKi
+                    flag_good_or_bad_ART = 1;
                     for (vi = neg_DEAD_CHANNELS->begin(); vi != neg_DEAD_CHANNELS->end(); ++vi){ //Write which channels from 64 are bad
                         if (*vi == k){ //If channel has been found in bad, flag turns 0
                             flag_good_or_bad = 0;
                             break;
                         }
                     }
+                    //Bad_by_ART
+                    for (vi = numberBadCh_ARTneg->begin(); vi != numberBadCh_ARTneg->end(); ++vi){ //Write which channels from 64 are bad
+                        if (*vi == k){ //If channel has been found in bad, flag turns 0
+                            flag_good_or_bad_ART = 0;
+                            break;
+                        }
+                    }
+                    print_to_log_to_Global(EntriesARTneg[k], fileo_ART_entries);
+                    //Bad_by_PDO
+                    if (PDOMEAN_L0NEG[k] < 200 || PDOMEAN_L0NEG[k] > 1022 || PDOEntriesMEAN_L0NEG[k] < 50){
+                        fileo_dead_ch_PDO<<"0";
+                    }
+                    else
+                        fileo_dead_ch_PDO<<"1";
+                    print_to_log_to_Global(PDOMEAN_L0NEG[k], fileo_PDO_mean);
+                    print_to_log_to_Global(PDOEntriesMEAN_L0NEG[k], fileo_PDO_entries);
+                    //Bad_by_TDO
+                    if (TDOMEAN_L0NEG[k] < 32 || TDOMEAN_L0NEG[k] > 254 || TDOEntriesMEAN_L0NEG[k] < 50){
+                        fileo_dead_ch_TDO<<"0";
+                    }
+                    else
+                        fileo_dead_ch_TDO<<"1";
+                    print_to_log_to_Global(TDOMEAN_L0NEG[k], fileo_TDO_mean);
+                    print_to_log_to_Global(TDOEntriesMEAN_L0NEG[k], fileo_TDO_entries);
+                    //Bad_by_DDO
+                    if (MEAN_DDOneg[k] < 2 || MEAN_DDOneg[k] > 62)
+                        fileo_dead_ch_DDO<<"0";
+                    else
+                        fileo_dead_ch_DDO<<"1";
+                    print_to_log_to_Global(MEAN_DDOneg[k], fileo_DDO_mean);
                     fileo_dead_ch<<flag_good_or_bad;
+                    fileo_dead_ch_ART<<flag_good_or_bad_ART;
                 }
+                //Tab to switch to Positive
                 fileo_dead_ch<<"\t";
-                //Write the information about dead channels_Negative_bline
+                fileo_dead_ch_ART<<"\t";
+                fileo_dead_ch_PDO<<"\t";
+                fileo_dead_ch_TDO<<"\t";
+                fileo_dead_ch_DDO<<"\t";
+                fileo_PDO_mean<<"\t";
+                fileo_TDO_mean<<"\t";
+                fileo_PDO_entries<<"\t";
+                fileo_TDO_entries<<"\t";
+                fileo_DDO_mean<<"\t";
+                fileo_ART_entries<<"\t";
+                //Bad_by_Bline
                 if (bLineNeg[0] >= 0){ //If Bline file exists
                     for (k = 0; k<64; k++){
                         if ((bLineNeg[k] > 135) && (bLineNeg[k] < 195)) 
                             fileo_dead_ch_Bline<<"1";
                         else
                             fileo_dead_ch_Bline<<"0";
+                        fileo_Bline<<bLineNeg[k]<<" ";
                     }
                 }
-                else //If Bline file is absent
+                else{ //If Bline file is absent
                     fileo_dead_ch_Bline<<"----------------------------------------------------------------";
+                    fileo_Bline<<"----------------------------------------------------------------";
+                }
                 fileo_dead_ch_Bline<<"\t";
+                fileo_Bline<<"\t";
                 //Search again to Fill in the Positive fields
                 for (j = 0; j<arrSize; j++){
                     if ((arr[i][0] == arr[j][0]) && ((arr[j][5] == 1) || (arr[j][5] == 21) || (arr[j][5] == 221))){ //if FlagPos is good for this chip
@@ -623,40 +704,100 @@ int write_to_Global(int arr[][11], int arrSize){
                         //Now, lets write the information about dead channels_Posititve
                         for (k = 0; k<64; k++){
                             flag_good_or_bad = 1; //By default, the channel is OK
+                            flag_good_or_bad_ART = 1;
                             for (vi = pos_DEAD_CHANNELS->begin(); vi != pos_DEAD_CHANNELS->end(); ++vi){ //Write which channels from 64 are bad
                                 if (*vi == k){   //If channel has been found in bad, flag turns 0
                                     flag_good_or_bad = 0;
                                     break;
                                 }
                             }
+                            //Bad_by_ART
+                            for (vi = numberBadCh_ARTpos->begin(); vi != numberBadCh_ARTpos->end(); ++vi){ //Write which channels from 64 are bad
+                                if (*vi == k){ //If channel has been found in bad, flag turns 0
+                                    flag_good_or_bad_ART = 0;
+                                    break;
+                                }
+                            }
+                            print_to_log_to_Global(EntriesARTpos[k], fileo_ART_entries);
+                            //Bad_by_PDO
+                            if (PDOMEAN_L0POS[k] < 200 || PDOMEAN_L0POS[k] > 1022 || PDOEntriesMEAN_L0POS[k] < 50)
+                                fileo_dead_ch_PDO<<"0";
+                            else
+                                fileo_dead_ch_PDO<<"1";
+                            print_to_log_to_Global(PDOMEAN_L0POS[k], fileo_PDO_mean);
+                            print_to_log_to_Global(PDOEntriesMEAN_L0POS[k], fileo_PDO_entries);
+                            //Bad_by_TDO
+                            if (TDOMEAN_L0POS[k] < 32 || TDOMEAN_L0POS[k] > 254 || TDOEntriesMEAN_L0POS[k] < 50)
+                                fileo_dead_ch_TDO<<"0";
+                            else
+                               fileo_dead_ch_TDO<<"1";
+                            print_to_log_to_Global(TDOMEAN_L0POS[k], fileo_TDO_mean);
+                            print_to_log_to_Global(TDOEntriesMEAN_L0POS[k], fileo_TDO_entries);
+                            //Bad_by_DDO
+                            if (MEAN_DDOpos[k] < 2 || MEAN_DDOpos[k] > 62)
+                                fileo_dead_ch_DDO<<"0";
+                            else
+                               fileo_dead_ch_DDO<<"1";
+                            print_to_log_to_Global(MEAN_DDOpos[k], fileo_DDO_mean);
                             fileo_dead_ch<<flag_good_or_bad;
+                            fileo_dead_ch_ART<<flag_good_or_bad_ART;
                         }
-                        //Write dead channels in Bline mode
+                        //Write Bline and  dead channels in Bline mode
                         if (bLinePos[0] >= 0){ //If Bline file exists
                             for (k = 0; k<64; k++){
                                 if ((bLinePos[k] > 135) && (bLinePos[k] < 195))
                                     fileo_dead_ch_Bline<<"1";
                                 else
                                     fileo_dead_ch_Bline<<"0";
+                                fileo_Bline<<bLineNeg[k]<<" ";
                             }
                         }
-                        else //If Bline file is absent
+                        else{ //If Bline file is absent
                             fileo_dead_ch_Bline<<"----------------------------------------------------------------";
+                            fileo_Bline<<"----------------------------------------------------------------";
+                        }
                         fileo_dead_ch_Bline<<endl;
+                        fileo_Bline<<endl;
                         fileo_dead_ch<<endl;
-                        break;
+                        fileo_dead_ch_ART<<endl;
+                        fileo_dead_ch_PDO<<endl;
+                        fileo_dead_ch_TDO<<endl;
+                        fileo_dead_ch_DDO<<endl;
+                        fileo_TDO_mean<<endl;
+                        fileo_TDO_entries<<endl;
+                        fileo_PDO_mean<<endl;
+                        fileo_PDO_entries<<endl;
+                        fileo_DDO_mean<<endl;
+                        fileo_ART_entries<<endl;
+                        break; //If the positive data for this chip are found - stop searching
                     }
                     else if (j == (arrSize - 1)){ //If we didn't find the positive results for the chip
                         fileo<<endl; //End lines in all files
                         fileo_dead_ch<<endl;
                         fileo_dead_ch_Bline<<endl;
+                        fileo_dead_ch_ART<<endl;
+                        fileo_dead_ch_PDO<<endl;
+                        fileo_dead_ch_TDO<<endl;
+                        fileo_dead_ch_DDO<<endl;
+                        fileo_Bline<<endl;
+                        fileo_TDO_mean<<endl;
+                        fileo_TDO_entries<<endl;
+                        fileo_PDO_mean<<endl;
+                        fileo_PDO_entries<<endl;
+                        fileo_DDO_mean<<endl;
+                        fileo_ART_entries<<endl;
                     }
                 }
         }
     }
     return 0; 
 }
-
+int print_to_log_to_Global(float value, ofstream& file){
+    if (value >= 0) //If enty exists
+        file<<value<<" "; //print this value
+    else
+        file<<"- ";
+}
 void write_to_Database(int arr[][11], int arrSize, int neg_or_pos) //neg = 0, pos = 1
 {   
     TString path_to_web;
@@ -1522,9 +1663,6 @@ void two_2Dhist(string xname1, string yname1, string xname2, string yname2, TH2F
     int ny2 = yname2.length();
     char x2[nx2+1];
     char y2[ny2+1];
-    strcpy(x1, xname1.c_str());
-    strcpy(y1, yname1.c_str());
-    strcpy(x2, xname2.c_str());
     strcpy(y2, yname2.c_str());
 
     Canv->Divide(1,2);

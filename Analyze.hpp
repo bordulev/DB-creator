@@ -38,6 +38,7 @@ TFile *rootfile;
 TTree *roottree;
 
 //for hsitograms
+TH2F *hSatus_VS_VMMId = new TH2F("hSatus_VS_VMMId", "Status VS VMMID", 105, 140000, 162000, 7, -1, 7);//0 histogram
 TH1F *hbline = new TH1F("hbaseline", "Baseline  ", 300,50,250);//1st and 2nd hist - Baseline
 TH2F *hblineVMM = new TH2F("hblineVMM", "Baseline vs VMMId  ", 105,50,250,105,0,3300);//3rd VMMMin, VMMMax
 TH2F *hblineTEMP = new TH2F("hblineTEMP", "Baseline vs tempreture  ", 105,50,250,105,30,50);//4th
@@ -101,10 +102,18 @@ TString path_to_file_database = path_to_DB_creator + "/output/summary/best_test/
 TString path_to_file_GlobalLog = path_to_DB_creator + "/output/summary/log_to_global/globalLog.txt";
 TString path_to_file_GlobalLog_dead_ch = path_to_DB_creator + "/output/summary/log_to_global/globalLog_dead_ch.txt";
 TString path_to_file_GlobalLog_dead_ch_Bline = path_to_DB_creator + "/output/summary/log_to_global/globalLog_dead_ch_Bline.txt";
-TString path_to_fileo_dead_ch_ART = path_to_DB_creator + "/output/summary/log_to_global/globalLog_dead_ch_ART.txt";
-TString path_to_fileo_dead_ch_PDO = path_to_DB_creator + "/output/summary/log_to_global/globalLog_dead_ch_PDO.txt";
-TString path_to_fileo_dead_ch_TDO = path_to_DB_creator + "/output/summary/log_to_global/globalLog_dead_ch_TDO.txt";
-TString path_to_fileo_dead_ch_DDO = path_to_DB_creator + "/output/summary/log_to_global/globalLog_dead_ch_DDO.txt";
+TString path_to_file_GlobalLog_dead_ch_ART = path_to_DB_creator + "/output/summary/log_to_global/globalLog_dead_ch_ART.txt";
+TString path_to_file_GlobalLog_dead_ch_PDO = path_to_DB_creator + "/output/summary/log_to_global/globalLog_dead_ch_PDO.txt";
+TString path_to_file_GlobalLog_dead_ch_TDO = path_to_DB_creator + "/output/summary/log_to_global/globalLog_dead_ch_TDO.txt";
+TString path_to_file_GlobalLog_dead_ch_DDO = path_to_DB_creator + "/output/summary/log_to_global/globalLog_dead_ch_DDO.txt";
+TString path_to_file_GlobalLog_Bline = path_to_DB_creator + "/output/summary/log_to_global/globalLog_Bline.txt";
+TString path_to_file_GlobalLog_PDO_mean = path_to_DB_creator + "/output/summary/log_to_global/globalLog_PDO_mean.txt";
+TString path_to_file_GlobalLog_TDO_mean = path_to_DB_creator + "/output/summary/log_to_global/globalLog_TDO_mean.txt";
+TString path_to_file_GlobalLog_PDO_entries = path_to_DB_creator + "/output/summary/log_to_global/globalLog_PDO_entries.txt";
+TString path_to_file_GlobalLog_TDO_entries = path_to_DB_creator + "/output/summary/log_to_global/globalLog_TDO_entries.txt";
+TString path_to_file_GlobalLog_DDO_mean = path_to_DB_creator + "/output/summary/log_to_global/globalLog_DDO_mean.txt";
+TString path_to_file_GlobalLog_ART_entries = path_to_DB_creator + "/output/summary/log_to_global/globalLog_ART_entries.txt";
+
 //TString upload_chips = "list.txt";
 TString path_to_SN_file = "input/SN.log";
 TString path_to_EQ_ID = "input_files/EQ_ID.txt";
@@ -176,11 +185,11 @@ Int_t PDOEntriesMEAN_L0POS[64];
 Int_t PDOEntriesMEAN_L0NEG[64];
 Int_t TDOEntriesMEAN_L0POS[64];
 Int_t TDOEntriesMEAN_L0NEG[64];
+Int_t EntriesARTpos[64];
+Int_t EntriesARTneg[64];
 
 Int_t countBadCh_ARTneg;
 Int_t countBadCh_ARTpos;
-Int_t EntriesARTneg[64];
-Int_t EntriesARTpos[64];
 
 TBranch        *b_VDDP_A_Max_L0; // branch for vector numbers of dead channels for positive
 TBranch        *b_pos_DEAD_CHANNELS; // branch for vector numbers of dead channels for positive
@@ -202,7 +211,7 @@ Int_t i, j, k, l, m; //default counters in "For" cycles
 vector<int>::const_iterator vi; //iterator for the int vector
 Int_t size_neg, size_pos;
 
-ofstream fileo, fileo_dead_ch, fileo_dead_ch_Bline, fileo_dead_ch_ART, fileo_dead_ch_PDO, fileo_dead_ch_TDO, fileo_dead_ch_DDO, outputfile;
+ofstream fileo, fileo_dead_ch, fileo_dead_ch_Bline, fileo_dead_ch_ART, fileo_dead_ch_PDO, fileo_dead_ch_TDO, fileo_dead_ch_DDO, fileo_Bline, fileo_PDO_mean, fileo_TDO_mean, fileo_PDO_entries, fileo_TDO_entries, fileo_DDO_mean, fileo_ART_entries, outputfile;
 stringstream sstm;
 const int string_len = 100; //TEMP. to work with Added_SN and EQ_ID txt files 
 const int number_of_strings = 1514; //TEMP. to work with Added_SN ans EQ_ID txt files
